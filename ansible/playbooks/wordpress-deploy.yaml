@@ -1,0 +1,75 @@
+---
+- name: Wait for ssh connection
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Ensure ssh port open
+      ansible.builtin.wait_for:
+        port: 22
+        delay: 10
+        timeout: 100
+        search_regex: OpenSSH
+        host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+      vars:
+        ansible_connection: local
+
+- name: Install all components
+  hosts: all
+  become: true
+  tasks:
+
+  - name: Install python3 and docker
+    vars:
+      ansible_python_interpreter: /usr/bin/python
+    ansible.builtin.yum:
+      name:
+        - python3
+        - docker
+      update_cache: true
+      state: present
+
+  - name: Install docker python module
+    ansible.builtin.pip:
+      name: docker
+  
+  - name: Ensure docker is running
+    ansible.builtin.systemd:
+      name: docker
+      state: started
+      daemon_reload: yes
+
+  - name: Install docker-compose
+    ansible.builtin.pip:
+        name: docker-compose
+        version: latest
+        executable: pip3
+        state: present
+
+- name: Add ec2-user to docker group
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Add ec2-user to docker group
+      ansible.builtin.user:
+        name: ec2-user
+        groups: docker
+        append: true
+    
+    - name: reset ssh connection
+      ansible.builtin.meta: reset_connection
+
+- name: Start docker containers
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Copy docker-compose file
+      ansible.builtin.copy:
+        src: files/docker-compose.yaml
+        dest: /home/ec2-user/docker-compose.yaml
+
+    - name: Start Docker Compose
+      ansible.builtin.docker_compose:
+        project_src: /home/ec2-user/
+        project_name: codica
