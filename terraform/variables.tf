@@ -8,7 +8,7 @@ variable "default_az" {
 }
 
 variable "profile" {
-  default = "default"
+  default = "codica_task"
 }
 
 # Naming
