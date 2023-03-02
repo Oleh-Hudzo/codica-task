@@ -12,6 +12,13 @@ resource "aws_security_group" "sg_web" {
   }
   
   ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  
+  ingress {
     description      = "HTTP"
     from_port        = 80
     to_port          = 80
@@ -56,11 +63,8 @@ resource "aws_instance" "wp-instance" {
 
   tags = {
     Name = "${var.default_tag}-ec2"
+    TargetGroup = "wp-instance-tg"
   }
-}
-
-output "public_ip" {
-  value = aws_instance.wp-instance.public_ip
 }
 
 resource "null_resource" "configure_server" {
