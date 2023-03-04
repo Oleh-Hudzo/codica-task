@@ -1,3 +1,4 @@
+# Public subnets
 resource "aws_subnet" "sn_public_a" {
   vpc_id                  = aws_vpc.wp-vpc.id
   cidr_block              = "10.0.0.0/24"
@@ -20,6 +21,7 @@ resource "aws_subnet" "sn_public_b" {
   }
 }
 
+#Private subnets
 resource "aws_subnet" "sn_private_a" {
   vpc_id                  = aws_vpc.wp-vpc.id
   cidr_block              = "10.0.2.0/24"
