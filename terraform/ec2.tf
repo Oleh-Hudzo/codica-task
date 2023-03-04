@@ -1,44 +1,18 @@
-resource "aws_security_group" "sg_web" {
-  name        = "sg_web"
-  description = "Security Group Web"
-  vpc_id      = aws_vpc.wp-vpc.id
-
-  ingress {
-    description      = "SSH"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "TCP"
-    cidr_blocks      = ["0.0.0.0/0"]
-  }
-  
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  ingress {
-    description      = "HTTP"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "TCP"
-    cidr_blocks      = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  tags = {
-    Name = "${var.default_tag}-sg-web"
-  }
+# Check for latest Ubuntu ami
+data "aws_ami" "latest-ubuntu-image" {
+    most_recent = true
+    owners = ["099720109477"]
+    filter {
+      name = "name"
+      values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    }
+    filter {
+      name = "virtualization-type"
+      values = ["hvm"]
+    }
 }
 
+/* Check for latest Amazon Linux 2 ami (just an option for further tasks)
 data "aws_ami" "latest-amazon-linux-image" {
     most_recent = true
     owners = ["amazon"]
@@ -51,9 +25,11 @@ data "aws_ami" "latest-amazon-linux-image" {
       values = ["hvm"]
     }
 }
+*/
 
+# AWS EC2 instance
 resource "aws_instance" "wp-instance" {
-  ami                         = data.aws_ami.latest-amazon-linux-image.id
+  ami                         = data.aws_ami.latest-ubuntu-image.id
   instance_type               = var.ec2_instance_type
   key_name                    = var.ssh_key_name
   subnet_id                   = aws_subnet.sn_public_a.id
@@ -67,6 +43,7 @@ resource "aws_instance" "wp-instance" {
   }
 }
 
+# Provisioning with Ansible
 resource "null_resource" "configure_server" {
   triggers = {
     trigger = aws_instance.wp-instance.public_ip
@@ -74,6 +51,12 @@ resource "null_resource" "configure_server" {
 
   provisioner "local-exec" {
     working_dir = "../ansible/"
-    command = "ansible-playbook --inventory ${aws_instance.wp-instance.public_ip}, --private-key ${var.ssh_key_path} --user ec2-user playbooks/wordpress-deploy.yaml --extra-vars \"rds_endpoint=$(terraform output rds_endpoint)\""
+    command = "ansible-playbook --inventory ${aws_instance.wp-instance.public_ip}, --private-key ${var.ssh_key_path} --user ubuntu playbooks/wordpress-deploy.yaml"
   }
+    /* Provisioner for Amazon Linux 2 instance
+    provisioner "local-exec" {
+    working_dir = "../ansible/"
+    command = "ansible-playbook --inventory ${aws_instance.wp-instance.public_ip}, --private-key ${var.ssh_key_path} --user ubuntu playbooks/wordpress-deploy.yaml"
+  }
+    */
 }
