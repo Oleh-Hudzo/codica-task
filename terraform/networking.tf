@@ -8,7 +8,7 @@ resource "aws_internet_gateway" "default" {
 }
 
 # Elastic IP
-resource "aws_eip" "wp_eip" {
+resource "aws_eip" "nat_eip" {
   vpc = true
 }
 /*
@@ -17,8 +17,3 @@ resource "aws_eip_association" "eip_assoc" {
   allocation_id = aws_eip.wp_eip.id
 }
 */
-# Create NAT Gateway
-resource "aws_nat_gateway" "wp-nat" {
-  allocation_id = aws_eip.wp_eip.id
-  subnet_id     = aws_subnet.sn_public_a.id
-}

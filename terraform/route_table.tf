@@ -32,12 +32,37 @@ resource "aws_route_table" "rt_private" {
   }
 }
 
-resource "aws_route_table_association" "rt_private_a" {
-  subnet_id      = aws_subnet.sn_private_a.id
-  route_table_id = aws_route_table.rt_private.id
+# Create NAT Gateway
+resource "aws_nat_gateway" "nat_gw" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.sn_public_a.id
+
+  tags = {
+    Name = "${var.default_tag}-nat-gw"
+  }
 }
 
-resource "aws_route_table_association" "rt_private_b" {
+# Route Table with NAT
+resource "aws_route_table" "private_nat_rt" {
+  vpc_id = aws_vpc.wp-vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat_gw.id
+  }
+
+  tags = {
+    Name = "${var.default_tag}-rt-private-nat"
+  }
+}
+
+# Associate route table with private subnets
+resource "aws_route_table_association" "private_nat_rt_a" {
+  subnet_id      = aws_subnet.sn_private_a.id
+  route_table_id = aws_route_table.private_nat_rt.id
+}
+
+resource "aws_route_table_association" "private_nat_rt_b" {
   subnet_id      = aws_subnet.sn_private_b.id
-  route_table_id = aws_route_table.rt_private.id
+  route_table_id = aws_route_table.private_nat_rt.id
 }
