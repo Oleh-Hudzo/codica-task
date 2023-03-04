@@ -13,6 +13,99 @@
       vars:
         ansible_connection: local
 
+######################################
+# Tasks for Ubuntu operating systems #
+######################################
+- name: Ubuntu playbook
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Install aptitude
+      ansible.builtin.apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Install required system packages
+      ansible.builtin.apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Add Docker GPG apt Key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+      when: ansible_os_family == "Debian"
+  
+    - name: Update apt and install docker-ce
+      ansible.builtin.apt:
+        name: docker-ce
+        state: latest
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Install Docker Module for Python
+      ansible.builtin.pip:
+        name: docker
+        state: present
+      when: ansible_os_family == "Debian"
+    
+    - name: Add ubuntu user to docker group
+      ansible.builtin.user:
+        name: ubuntu
+        groups: docker
+        append: yes
+      when: ansible_os_family == "Debian"
+
+    - name: reset ssh connection
+      ansible.builtin.meta: reset_connection
+      when: ansible_os_family == "Debian"
+  
+    - name: Install docker-compose
+      ansible.builtin.pip:
+        name: docker-compose
+        version: latest
+        executable: pip3
+        state: present
+      when: ansible_os_family == "Debian"
+
+- name: Start wordpress project as docker container
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Copy docker-compose file
+      ansible.builtin.copy:
+        src: files/docker-compose.yaml
+        dest: /home/ubuntu/docker-compose.yaml
+      when: ansible_os_family == "Debian"
+  
+    - name: Start Docker Compose project
+      ansible.builtin.docker_compose:
+        project_src: /home/ubuntu/
+        project_name: codica
+      when: ansible_os_family == "Debian" 
+
+#####################################
+# Tasks for RHEL operating systems  #
+#####################################
 - name: Install all components
   hosts: all
   become: true
@@ -27,16 +120,19 @@
         - docker
       update_cache: true
       state: present
+    when: ansible_os_family == "Redhat"
 
   - name: Install docker python module
     ansible.builtin.pip:
       name: docker
+    when: ansible_os_family == "Redhat"
   
   - name: Ensure docker is running
     ansible.builtin.systemd:
       name: docker
       state: started
       daemon_reload: yes
+    when: ansible_os_family == "Redhat"
 
   - name: Install docker-compose
     ansible.builtin.pip:
@@ -44,6 +140,7 @@
         version: latest
         executable: pip3
         state: present
+    when: ansible_os_family == "Redhat"
 
 - name: Add ec2-user to docker group
   hosts: all
@@ -55,11 +152,13 @@
         name: ec2-user
         groups: docker
         append: true
+      when: ansible_os_family == "Redhat"
     
     - name: reset ssh connection
       ansible.builtin.meta: reset_connection
+      when: ansible_os_family == "Redhat"
 
-- name: Start docker containers
+- name: Start wordpress project as docker container
   hosts: all
   become: true
   tasks:
@@ -68,8 +167,10 @@
       ansible.builtin.copy:
         src: files/docker-compose.yaml
         dest: /home/ec2-user/docker-compose.yaml
+      when: ansible_os_family == "Redhat" 
 
     - name: Start Docker Compose
       ansible.builtin.docker_compose:
         project_src: /home/ec2-user/
         project_name: codica
+      when: ansible_os_family == "Redhat" 
