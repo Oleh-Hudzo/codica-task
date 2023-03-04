@@ -1,3 +1,4 @@
+# Application Load Balancer
 resource "aws_lb" "alb" {
   name               = "wp-alb"
   internal           = false
@@ -6,6 +7,7 @@ resource "aws_lb" "alb" {
   subnets            = [aws_subnet.sn_public_a.id , aws_subnet.sn_public_b.id]
 }
 
+# Target group
 resource "aws_lb_target_group" "target_group" {
   name        = "wp-instance-tg"
   port        = 80

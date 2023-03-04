@@ -8,9 +8,9 @@ services:
       - 80:80
     restart: always
     environment:
-      WORDPRESS_DB_HOST: codica-rds.ckta7d6pblur.eu-central-1.rds.amazonaws.com:3306
-      WORDPRESS_DB_USER: wpuser
-      WORDPRESS_DB_PASSWORD: CODICAexample
-      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_HOST: codica-rds.ckta7d6pblur.eu-central-1.rds.amazonaws.com:3306 # Change the endpoint of your RDS
+      WORDPRESS_DB_USER: wpuser                                                      # Change the DB user (Make sure, that it's the same as in variables.tf file in terraform folder)
+      WORDPRESS_DB_PASSWORD: CODICAexample                                           # Change the DB password (Make sure, that it's the same as in variables.tf file in terraform folder)
+      WORDPRESS_DB_NAME: wordpress                                                   # Change the DB name (Make sure, that it's the same as in variables.tf file in terraform folder)
 volumes:
     wp_data:
