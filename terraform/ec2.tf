@@ -28,12 +28,12 @@ data "aws_ami" "latest-amazon-linux-image" {
 */
 
 # AWS EC2 instance
-resource "aws_instance" "wp-instance" {
+resource "aws_instance" "wordpress" {
   ami                         = data.aws_ami.latest-ubuntu-image.id
   instance_type               = var.ec2_instance_type
   key_name                    = var.ssh_key_name
-  vpc_security_group_ids      = [aws_security_group.sg_web.id]
-  subnet_id                   = aws_subnet.sn_public_a.id
+  vpc_security_group_ids      = [aws_security_group.web.id]
+  subnet_id                   = aws_subnet.public_a.id
   associate_public_ip_address = true
   monitoring                  = true
 
@@ -45,17 +45,17 @@ resource "aws_instance" "wp-instance" {
 # Provisioning with Ansible
 resource "null_resource" "configure_server" {
   depends_on = [
-    aws_db_instance.wp-db-instance
+    aws_db_instance.wordpress_rds
   ]
 
   provisioner "local-exec" {
     working_dir = "../ansible/"
-    command = "ansible-playbook --inventory ${aws_instance.wp-instance.public_ip}, --private-key ${var.ssh_key_path} --user ubuntu playbooks/wordpress-deploy.yaml"
+    command = "ansible-playbook --inventory ${aws_instance.wordpress.public_ip}, --private-key ${var.ssh_key_path} --user ubuntu playbooks/wordpress-deploy.yaml"
   }
     /* Provisioner for Amazon Linux 2 instance
     provisioner "local-exec" {
     working_dir = "../ansible/"
-    command = "ansible-playbook --inventory ${aws_instance.wp-instance.public_ip}, --private-key ${var.ssh_key_path} --user ubuntu playbooks/wordpress-deploy.yaml"
+    command = "ansible-playbook --inventory ${aws_instance.wordpress.public_ip}, --private-key ${var.ssh_key_path} --user ubuntu playbooks/wordpress-deploy.yaml"
   }
     */
 }

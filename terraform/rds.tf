@@ -1,9 +1,9 @@
 # RDS configuration
 
 ## Placing RDS in private subnet
-resource "aws_db_subnet_group" "default" {
+resource "aws_db_subnet_group" "this" {
   name       = "${var.default_tag}-sng-rds"
-  subnet_ids = [aws_subnet.sn_private_a.id, aws_subnet.sn_private_b.id]
+  subnet_ids = [aws_subnet.private_a.id, aws_subnet.private_b.id]
 
   tags = {
     Name = "${var.default_tag}-sng-rds"
@@ -11,7 +11,7 @@ resource "aws_db_subnet_group" "default" {
 }
 
 ## Creating RDS instance
-resource "aws_db_instance" "wp-db-instance" {
+resource "aws_db_instance" "wordpress_rds" {
   instance_class         = var.db_instance_class
   engine                 = var.db_engine
   engine_version         = var.db_engine_version
@@ -30,8 +30,8 @@ resource "aws_db_instance" "wp-db-instance" {
   username               = var.db_user
   password               = var.db_password
 
-  db_subnet_group_name   = aws_db_subnet_group.default.name
-  vpc_security_group_ids = [aws_security_group.sg_rds.id]
+  db_subnet_group_name   = aws_db_subnet_group.this.name
+  vpc_security_group_ids = [aws_security_group.rds.id]
   availability_zone      = var.default_az
 
   tags = {

@@ -1,10 +1,10 @@
 #Security groups
 
 ## Security group for webserver
-resource "aws_security_group" "sg_web" {
+resource "aws_security_group" "web" {
   name        = "sg_web"
   description = "Security Group Web"
-  vpc_id      = aws_vpc.wp-vpc.id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     description      = "SSH"
@@ -50,7 +50,7 @@ resource "aws_security_group" "sg_web" {
 resource "aws_security_group" "alb" {
   name = "sg_alb"
   description = "Security Group ALB"
-  vpc_id = aws_vpc.wp-vpc.id
+  vpc_id = aws_vpc.main.id
 
   ingress {
     description = "HTTP"
@@ -64,7 +64,7 @@ resource "aws_security_group" "alb" {
     from_port = 0
     to_port = 0
     protocol = "-1"
-    security_groups = [aws_security_group.sg_web.id]
+    security_groups = [aws_security_group.web.id]
   }
 
   tags = {
@@ -74,17 +74,17 @@ resource "aws_security_group" "alb" {
 }
 
 ## Security group for RDS instance
-resource "aws_security_group" "sg_rds" {
+resource "aws_security_group" "rds" {
   name        = "sg_rds"
   description = "Security Group RDS"
-  vpc_id      = aws_vpc.wp-vpc.id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     description      = "MYSQL/Aurora"
     from_port        = 3306
     to_port          = 3306
     protocol         = "TCP"
-    security_groups  = ["${aws_security_group.sg_web.id}"]
+    security_groups  = ["${aws_security_group.web.id}"]
   }
 
   tags = {
