@@ -17,6 +17,11 @@ variable "profile" {           // Profile must be generated beforehand through t
   description = "The AWS CLI profile to use when authenticating with AWS. This must be generated beforehand through the AWS Console with at least programmatic access"
 }
 
+variable "cidr_block" {
+  default = "10.10.0.0/16"
+  description = "VPC cidr block"
+}
+
 ############################
 #          Naming          #
 ############################ 
