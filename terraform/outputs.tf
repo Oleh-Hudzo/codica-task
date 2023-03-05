@@ -2,7 +2,7 @@ output "rds_endpoint" {
   value = aws_db_instance.wp-db-instance.endpoint
 }
 
-output "public_ip" {
+output "ip_for_ssh" {
   value = aws_instance.wp-instance.public_ip
 }
 
