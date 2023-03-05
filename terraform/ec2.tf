@@ -32,22 +32,21 @@ resource "aws_instance" "wp-instance" {
   ami                         = data.aws_ami.latest-ubuntu-image.id
   instance_type               = var.ec2_instance_type
   key_name                    = var.ssh_key_name
+  vpc_security_group_ids      = [aws_security_group.sg_web.id]
   subnet_id                   = aws_subnet.sn_public_a.id
   associate_public_ip_address = true
-  vpc_security_group_ids      = [aws_security_group.sg_web.id]
   monitoring                  = true
 
   tags = {
     Name = "${var.default_tag}-ec2"
-    TargetGroup = "wp-instance-tg"
   }
 }
 
 # Provisioning with Ansible
 resource "null_resource" "configure_server" {
-  triggers = {
-    trigger = aws_instance.wp-instance.public_ip
-  }
+  depends_on = [
+    aws_db_instance.wp-db-instance
+  ]
 
   provisioner "local-exec" {
     working_dir = "../ansible/"

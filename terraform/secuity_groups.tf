@@ -1,6 +1,6 @@
 #Security groups
 
-## Security group for AWS EC2 instance
+## Security group for webserver
 resource "aws_security_group" "sg_web" {
   name        = "sg_web"
   description = "Security Group Web"
@@ -28,7 +28,10 @@ resource "aws_security_group" "sg_web" {
     from_port        = 80
     to_port          = 80
     protocol         = "TCP"
-    cidr_blocks      = ["0.0.0.0/0"]
+    cidr_blocks      = [
+      cidrsubnet(var.cidr_block, 8, 1),
+      cidrsubnet(var.cidr_block, 8, 2)
+    ]
   }
 
   egress {
@@ -36,7 +39,6 @@ resource "aws_security_group" "sg_web" {
     to_port          = 0
     protocol         = "-1"
     cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
   }
 
   tags = {
@@ -44,6 +46,32 @@ resource "aws_security_group" "sg_web" {
   }
 }
 
+## Security group for ALB
+resource "aws_security_group" "alb" {
+  name = "sg_alb"
+  description = "Security Group ALB"
+  vpc_id = aws_vpc.wp-vpc.id
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "TCP"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    security_groups = [aws_security_group.sg_web.id]
+  }
+
+  tags = {
+    Name = "${var.default_tag}-sg-alb"
+  }
+
+}
 
 ## Security group for RDS instance
 resource "aws_security_group" "sg_rds" {
